@@ -1,6 +1,7 @@
 ﻿'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Chrome, Github } from 'lucide-react';
@@ -10,16 +11,20 @@ import { VideoBackground } from '../../components/VideoBackground';
 
 export default function SignInPage() {
   const router = useRouter();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{
+    email?: string;
+    password?: string;
+  }>({});
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {};
 
-    if (!email) {
+    if (!email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       newErrors.email = 'Please enter a valid email';
@@ -41,200 +46,178 @@ export default function SignInPage() {
     if (!validateForm()) return;
 
     setLoading(true);
+
     try {
-      // Simulate API call
+      // Replace this with the real authentication request.
       await new Promise((resolve) => setTimeout(resolve, 1500));
-      // In production, make actual API call here
       router.push('/');
-    } catch (error) {
-      setErrors({ email: 'Sign in failed. Please try again.' });
+    } catch {
+      setErrors({
+        email: 'Sign in failed. Please try again.',
+      });
     } finally {
       setLoading(false);
     }
   };
 
   const handleGoogleSignIn = () => {
-    // Implement Google OAuth
     alert('Google Sign In - implement with OAuth');
   };
 
   const handleGithubSignIn = () => {
-    // Implement GitHub OAuth
     alert('GitHub Sign In - implement with OAuth');
   };
 
   return (
-    <main className="relative min-h-screen w-full bg-[#050816]">
+    <main className="relative min-h-screen overflow-hidden bg-[#09090b]">
       <VideoBackground overlay="auth" />
 
-      {/* Content */}
-      <div className="relative z-10 flex min-h-screen items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_35%,rgba(34,211,238,0.08),transparent_35%)]" />
+
+      <div className="relative z-10 flex min-h-screen items-center justify-center px-4 py-10 sm:px-6">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: 'easeOut' }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
           className="w-full max-w-md"
         >
-          {/* Card */}
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 shadow-[0_8px_40px_rgba(0,0,0,0.35)] backdrop-blur-3xl sm:p-10">
+          <div className="overflow-hidden rounded-2xl border border-white/[0.09] bg-black/40 p-6 shadow-2xl shadow-black/40 backdrop-blur-2xl sm:p-8">
             {/* Logo */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.1, duration: 0.5 }}
-              className="mb-8 flex justify-center"
-            >
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-sky-600 shadow-lg shadow-sky-500/30">
-                <span className="text-2xl font-bold text-white">SS</span>
+            <div className="mb-7 flex justify-center">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10 shadow-[0_0_30px_rgba(34,211,238,0.12)]">
+                <span className="text-xl font-bold tracking-tight text-cyan-300">
+                  SS
+                </span>
               </div>
-            </motion.div>
+            </div>
 
             {/* Heading */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
-              className="mb-8 text-center"
-            >
-              <h1 className="text-3xl font-semibold text-white">StockSense AI</h1>
-              <p className="mt-2 text-sm text-slate-400">AI-Powered Market Intelligence Platform</p>
-            </motion.div>
+            <div className="mb-8 text-center">
+              <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+                Welcome back
+              </h1>
+
+              <p className="mt-2 text-sm text-zinc-400">
+                Sign in to your StockSense workspace
+              </p>
+            </div>
 
             {/* Form */}
-            <motion.form
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
-              onSubmit={handleSignIn}
-              className="space-y-5"
-            >
-              {/* Email Input */}
+            <form onSubmit={handleSignIn} className="space-y-5">
               <FormInput
                 label="Email"
                 type="email"
                 placeholder="your@email.com"
                 icon={<Mail className="h-5 w-5" />}
                 value={email}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setEmail(e.target.value)
+                }
                 error={errors.email}
               />
 
-              {/* Password Input */}
               <FormInput
                 label="Password"
                 type="password"
                 placeholder="••••••••"
                 icon={<Lock className="h-5 w-5" />}
                 value={password}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setPassword(e.target.value)
+                }
                 error={errors.password}
               />
 
-              {/* Remember Me & Forgot Password */}
-              <div className="flex items-center justify-between">
-                <label className="flex items-center gap-2 cursor-pointer group">
+              {/* Remember / Forgot */}
+              <div className="flex items-center justify-between gap-4">
+                <label className="group flex cursor-pointer items-center gap-2">
                   <input
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="h-4 w-4 rounded border border-white/10 bg-white/5 checked:bg-sky-500 checked:border-sky-500 focus:ring-2 focus:ring-sky-500/20 cursor-pointer"
+                    className="h-4 w-4 cursor-pointer rounded border-white/10 bg-white/5 text-cyan-400 accent-cyan-400 focus:ring-cyan-400/20"
                   />
-                  <span className="text-sm text-slate-400 group-hover:text-slate-300 transition">
+
+                  <span className="text-sm text-zinc-400 transition-colors group-hover:text-zinc-300">
                     Remember me
                   </span>
                 </label>
+
                 <a
                   href="#"
-                  className="text-sm text-slate-400 hover:text-sky-400 transition"
+                  className="text-sm text-zinc-400 transition-colors hover:text-cyan-400"
                 >
                   Forgot password?
                 </a>
               </div>
 
-              {/* Sign In Button */}
+              {/* Sign In */}
               <motion.button
                 type="submit"
                 disabled={loading}
-                whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="w-full rounded-full bg-gradient-to-r from-sky-500 to-sky-600 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-sky-500/30 transition disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-sky-500/40"
+                className="flex w-full items-center justify-center rounded-xl border border-cyan-300/20 bg-cyan-400 px-6 py-3.5 text-sm font-semibold text-black shadow-[0_0_25px_rgba(34,211,238,0.15)] transition-all hover:bg-cyan-300 hover:shadow-[0_0_30px_rgba(34,211,238,0.22)] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {loading ? (
-                  <span className="flex items-center justify-center gap-3">
+                  <span className="flex items-center gap-3">
                     <Loader size="sm" className="w-14" />
-                    <span className="text-xs uppercase tracking-[0.2em]">Signing in</span>
+                    <span className="text-xs uppercase tracking-[0.18em]">
+                      Signing in
+                    </span>
                   </span>
                 ) : (
                   'Launch AI Workspace'
                 )}
               </motion.button>
-            </motion.form>
+            </form>
 
             {/* Divider */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4, duration: 0.5 }}
-              className="my-6 flex items-center gap-4"
-            >
-              <div className="h-px flex-1 bg-white/10" />
-              <span className="text-xs text-slate-500">or continue with</span>
-              <div className="h-px flex-1 bg-white/10" />
-            </motion.div>
+            <div className="my-6 flex items-center gap-4">
+              <div className="h-px flex-1 bg-white/[0.08]" />
+              <span className="text-[11px] uppercase tracking-wider text-zinc-500">
+                or continue with
+              </span>
+              <div className="h-px flex-1 bg-white/[0.08]" />
+            </div>
 
-            {/* Social Login Buttons */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5, duration: 0.5 }}
-              className="grid grid-cols-2 gap-4"
-            >
+            {/* Social Login */}
+            <div className="grid grid-cols-2 gap-3">
               <motion.button
                 type="button"
                 onClick={handleGoogleSignIn}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 font-medium text-slate-300 transition hover:bg-white/10 hover:border-white/20"
+                whileTap={{ scale: 0.98 }}
+                className="flex items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] py-3 text-sm font-medium text-zinc-300 transition-colors hover:border-white/[0.14] hover:bg-white/[0.07] hover:text-white"
               >
-                <Chrome className="h-5 w-5" />
-                <span className="hidden sm:inline">Google</span>
+                <Chrome className="h-4 w-4" />
+                Google
               </motion.button>
 
               <motion.button
                 type="button"
                 onClick={handleGithubSignIn}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 font-medium text-slate-300 transition hover:bg-white/10 hover:border-white/20"
+                whileTap={{ scale: 0.98 }}
+                className="flex items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] py-3 text-sm font-medium text-zinc-300 transition-colors hover:border-white/[0.14] hover:bg-white/[0.07] hover:text-white"
               >
-                <Github className="h-5 w-5" />
-                <span className="hidden sm:inline">GitHub</span>
+                <Github className="h-4 w-4" />
+                GitHub
               </motion.button>
-            </motion.div>
+            </div>
 
-            {/* Sign Up Link */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.6, duration: 0.5 }}
-              className="mt-8 text-center text-sm text-slate-400"
-            >
-              Don't have an account?{' '}
-              <a href="/signup" className="text-sky-400 hover:text-sky-300 font-medium transition">
+            {/* Sign Up */}
+            <p className="mt-7 text-center text-sm text-zinc-500">
+              Don&apos;t have an account?{' '}
+              <Link
+                href="/signup"
+                className="font-medium text-cyan-400 transition-colors hover:text-cyan-300"
+              >
                 Sign up
-              </a>
-            </motion.div>
+              </Link>
+            </p>
           </div>
 
-          {/* Footer Note */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.7, duration: 0.5 }}
-            className="mt-6 text-center text-xs text-slate-500"
-          >
+          <p className="mt-5 text-center text-[11px] tracking-wide text-zinc-600">
             Powered by Multi-Agent Financial Intelligence
-          </motion.p>
+          </p>
         </motion.div>
       </div>
     </main>

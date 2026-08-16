@@ -80,6 +80,66 @@ const priceTrendColor = (value?: number) => {
   return value >= 0 ? 'text-emerald-300' : 'text-rose-300';
 };
 
+// Mock data for testing when API is unreachable
+const MOCK_STOCK_DATA: StockQuote = {
+  symbol: 'AAPL',
+  longName: 'Apple Inc.',
+  shortName: 'AAPL',
+  currency: 'USD',
+  exchangeName: 'NASDAQ',
+  marketState: 'REGULAR',
+  regularMarketPrice: 182.45,
+  regularMarketChange: 2.35,
+  regularMarketChangePercent: 1.30,
+  previousClose: 180.10,
+  open: 179.80,
+  dayHigh: 183.20,
+  dayLow: 179.50,
+  fiftyTwoWeekHigh: 199.62,
+  fiftyTwoWeekLow: 124.17,
+  marketCap: 2850000000000,
+  trailingPE: 28.5,
+  dividendYield: 0.0042,
+  regularMarketVolume: 52000000,
+  averageDailyVolume3Month: 48000000,
+  sector: 'Technology',
+  industry: 'Consumer Electronics',
+};
+
+const MOCK_CANDLES = Array.from({ length: 30 }, (_, i) => {
+  const date = new Date();
+  date.setDate(date.getDate() - (30 - i));
+  return {
+    timestamp: date.getTime(),
+    open: 175 + Math.random() * 10,
+    high: 180 + Math.random() * 10,
+    low: 172 + Math.random() * 10,
+    close: 177 + Math.random() * 10,
+    volume: 45000000 + Math.random() * 20000000,
+  };
+});
+
+const MOCK_NEWS: StockNewsItem[] = [
+  {
+    id: '1',
+    title: 'Apple Inc. Reports Strong Q3 Earnings Beat',
+    link: '#',
+    publisher: 'Reuters',
+    provider: 'Yahoo Finance',
+    summary: 'Apple exceeded analyst expectations with robust iPhone sales and services revenue.',
+    publishDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: '2',
+    title: 'AAPL Reaches New All-Time High on AI Optimism',
+    link: '#',
+    publisher: 'Bloomberg',
+    provider: 'Yahoo Finance',
+    summary: 'Investors react positively to Apple\'s artificial intelligence roadmap.',
+    publishDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+];
+
 function debounce<Value>(fn: (value: Value) => void, delay: number) {
   let timeout: number | null = null;
   return (value: Value) => {
@@ -123,9 +183,13 @@ export function StockSearchPanel() {
           throw new Error(payload?.error || 'Search failed');
         }
 
+        console.log('[DEBUG] Search suggestions loaded:', payload.suggestions);
         setSuggestions(payload.suggestions ?? []);
       } catch (e: unknown) {
-        setError(e instanceof Error ? e.message : 'Unable to fetch suggestions');
+        const errorMsg = e instanceof Error ? e.message : 'Unable to fetch suggestions';
+        console.error('[ERROR] Search failed:', errorMsg, e);
+        setError(errorMsg);
+        setSuggestions([]);
       } finally {
         setSearching(false);
       }
@@ -145,31 +209,49 @@ export function StockSearchPanel() {
       setError(null);
 
       try {
-        const [stockRes, newsRes] = await Promise.all([
-          fetch(`/api/stocks/${encodeURIComponent(selectedSymbol)}`),
-          fetch(`/api/stocks/${encodeURIComponent(selectedSymbol)}/news`),
-        ]);
+        // Step 1: Fetch stock quote and candles
+        console.log(`[DEBUG] Fetching stock data for symbol: ${selectedSymbol}`);
+        const stockRes = await fetch(`/api/stocks/${encodeURIComponent(selectedSymbol)}`);
+        console.log(`[DEBUG] Stock API response status: ${stockRes.status}`);
 
         const stockPayload = await stockRes.json();
-        const newsPayload = await newsRes.json();
+        console.log(`[DEBUG] Stock API payload:`, stockPayload);
 
         if (!stockRes.ok) {
-          throw new Error(stockPayload?.error || 'Unable to load stock data');
+          throw new Error(stockPayload?.error || `Stock API returned status ${stockRes.status}`);
         }
+
+        // Step 2: Fetch news
+        console.log(`[DEBUG] Fetching news for symbol: ${selectedSymbol}`);
+        const newsRes = await fetch(`/api/stocks/${encodeURIComponent(selectedSymbol)}/news`);
+        console.log(`[DEBUG] News API response status: ${newsRes.status}`);
+
+        const newsPayload = await newsRes.json();
+        console.log(`[DEBUG] News API payload:`, newsPayload);
 
         if (!newsRes.ok) {
-          throw new Error(newsPayload?.error || 'Unable to load news');
+          console.warn(`[WARN] News API failed: ${newsPayload?.error}. Using empty array.`);
         }
 
+        // Step 3: Update state with fetched data
         setQuote(stockPayload.quote ?? null);
         setCandles(stockPayload.candles ?? []);
         setNews(newsPayload.news ?? []);
         setSelectedIndex(-1);
+
+        console.log(`[DEBUG] Stock data loaded successfully for ${selectedSymbol}`);
       } catch (e: unknown) {
-        setError(e instanceof Error ? e.message : 'Unable to load stock details');
-        setQuote(null);
-        setCandles([]);
-        setNews([]);
+        const errorMsg = e instanceof Error ? e.message : 'Unable to load stock details';
+        console.error(`[ERROR] Failed to load stock data for ${selectedSymbol}:`, errorMsg, e);
+
+        // Fallback to mock data for testing
+        console.log(`[DEBUG] Loading mock data as fallback...`);
+        setQuote(MOCK_STOCK_DATA);
+        setCandles(MOCK_CANDLES);
+        setNews(MOCK_NEWS);
+
+        // Show error message to user
+        setError(`⚠️ Using sample data: ${errorMsg}. Check your API connection.`);
       } finally {
         setLoading(false);
       }
@@ -254,7 +336,7 @@ export function StockSearchPanel() {
               {suggestions.length > 0 && (
                 <div
                   ref={suggestionBoxRef}
-                  className="glass-card absolute left-0 right-0 z-20 mt-2 max-h-80 overflow-hidden overflow-y-auto rounded-3xl border border-slate-700 bg-slate-950/90 shadow-2xl shadow-slate-950/30"
+                  className="glass-card absolute left-0 right-0 z-50 mt-2 max-h-80 overflow-hidden overflow-y-auto rounded-3xl border border-slate-700 bg-slate-950/90 shadow-2xl shadow-slate-950/30"
                 >
                   {suggestions.map((item, index) => (
                     <button

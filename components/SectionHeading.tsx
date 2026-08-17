@@ -9,7 +9,7 @@ const reveal = (delay = 0) => ({
   whileInView: { opacity: 1, y: 0, filter: 'blur(0px)' },
   viewport: { once: true, amount: 0.3 },
   transition: { duration: 0.7, delay, ease },
-});
+})
 
 interface SectionHeadingProps {
   title: string;

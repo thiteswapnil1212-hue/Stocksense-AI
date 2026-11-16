@@ -2,6 +2,8 @@
 
 An **AI assistant for trading** — market data, AI-driven insights and interactive charts in one Next.js app.
 
+Live demo: https://stocksense-ai-thiteswapnil1212-hues-projects.vercel.app/
+
 ## What it does
 
 - **Market data** via `yahoo-finance2` (quotes, history)
@@ -23,6 +25,17 @@ npm run build
 ```
 
 Configure API keys (OpenAI, Upstash) in `.env.local` before running.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    User([Trader]) --> App["Next.js 15 app<br/>app/ + components/"]
+    App --> YF["yahoo-finance2<br/>quotes · history"]
+    App --> AI["OpenAI SDK<br/>AI insights · Q&A"]
+    App --> Charts["Recharts<br/>interactive charts · 3D view"]
+    App --> Store["Persistence<br/>better-sqlite3 local · Upstash Redis"]
+```
 
 ## Disclaimer
 

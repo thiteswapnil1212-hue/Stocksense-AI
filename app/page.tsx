@@ -1,12 +1,12 @@
 'use client';
 
 import { AppShell } from '../components/AppShell';
-import { StockSenseDashboard } from '../components/StockSenseDashboard';
+import { DashboardPreview } from '../components/DashboardPreview';
 
 export default function HomePage() {
   return (
     <AppShell>
-      <StockSenseDashboard />
+      <DashboardPreview />
     </AppShell>
   );
 }
